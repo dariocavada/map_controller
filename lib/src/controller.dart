@@ -9,6 +9,7 @@ import 'package:latlong/latlong.dart';
 import 'package:map_controller/src/exceptions.dart';
 import 'package:pedantic/pedantic.dart';
 import 'package:rxdart/rxdart.dart';
+import 'package:flutter_icons/flutter_icons.dart';
 
 import 'models.dart';
 import 'state/lines.dart';
@@ -156,6 +157,9 @@ class StatefulMapController {
   Future<void> removeMarkers({@required List<String> names}) =>
       _markersState.removeMarkers(names: names);
 
+  /// Remove ALL makers from the map (DARIO)
+  Future<void> removeAllMarkers() => _markersState.removeAllMarkers();
+
   /// Fit bounds for all markers on map
   Future<void> fitMarkers() async => _markersState.fitAll();
 
@@ -297,6 +301,176 @@ class StatefulMapController {
       await geojson.parse(data);
     }
   }
+
+  /* Dario */
+  /// Display some geojson data on the map
+  Future<void> fromGeoJsonAdv(String data,
+      {bool verbose = false,
+      String floor = "0",
+      Icon markerIcon = const Icon(MaterialCommunityIcons.elevator),
+      Color color = Colors.black,
+      double borderWidth = 0.0,
+      Color borderColor = const Color(0xFFFFFF00)}) async {
+    final geojson = GeoJson();
+    //print("fromGeoJsonAdv: floor: $floor");
+    geojson.processedFeatures.listen((GeoJsonFeature feature) {
+      //print("POINT feature ${feature.type} ${feature.properties}");
+      if (feature.properties["floor"].toString() == floor) {
+        switch (feature.type) {
+          case GeoJsonFeatureType.point:
+            final point = feature.geometry as GeoJsonPoint;
+            var marker = Icons.radio_button_checked;
+            String iconId = feature.properties['iconid'].toString();
+
+            // print ("map_controller: controller $iconId");
+            switch (iconId) {
+              case "accessible":
+                marker = MaterialIcons.accessible;
+                break;
+
+              case "explore":
+                marker = MaterialIcons.explore;
+                break;
+
+              case "favorite":
+                marker = MaterialIcons.favorite;
+                break;
+
+              case "delete":
+                marker = MaterialIcons.delete;
+                break;
+
+              case "event":
+                marker = MaterialIcons.event;
+                break;
+
+              case "home":
+                marker = MaterialIcons.home;
+                break;
+
+              case "language":
+                marker = MaterialIcons.language;
+                break;
+
+              case "directions_walk":
+                marker = MaterialIcons.directions_walk;
+                break;
+
+              case "local_cafe":
+                marker = MaterialIcons.local_cafe;
+                break;
+
+              case "local_dining":
+                marker = MaterialIcons.local_dining;
+                break;
+
+              case "local_parking":
+                marker = MaterialIcons.local_parking;
+                break;
+
+              case "wc":
+                marker = MaterialIcons.wc;
+                break;
+
+              case "wifi":
+                marker = MaterialIcons.wifi;
+                break;
+
+              case "escalator":
+                marker = MaterialCommunityIcons.escalator;
+                break;
+
+              case "stairs":
+                marker = MaterialCommunityIcons.stairs;
+                break;
+
+              case "elevator":
+                marker = MaterialCommunityIcons.elevator;
+                break;  
+
+              case "information":
+                marker = MaterialCommunityIcons.information;
+                break;  
+  
+              default:
+                marker = MaterialIcons.location_on;
+                break;
+            }
+
+            unawaited(addMarker(
+              name: point.name,
+              marker: Marker(
+                point:
+                    LatLng(point.geoPoint.latitude, point.geoPoint.longitude),
+                builder: (BuildContext context) => Icon(
+                  marker,
+                  color: color,
+                ),
+              ),
+            ));
+            break;
+
+          case GeoJsonFeatureType.multipoint:
+            final mp = feature.geometry as GeoJsonMultiPoint;
+            for (final geoPoint in mp.geoSerie.geoPoints) {
+              unawaited(addMarker(
+                name: geoPoint.name,
+                marker: Marker(
+                    point: LatLng(geoPoint.latitude, geoPoint.longitude),
+                    //builder: (BuildContext context) => Text("Ciao")),
+                    builder: (BuildContext context) => markerIcon),
+              ));
+            }
+            break;
+
+          case GeoJsonFeatureType.line:
+            final line = feature.geometry as GeoJsonLine;
+            unawaited(
+                addLine(name: line.name, points: line.geoSerie.toLatLng()));
+            break;
+
+          case GeoJsonFeatureType.multiline:
+            final ml = feature.geometry as GeoJsonMultiLine;
+            for (final line in ml.lines) {
+              unawaited(
+                  addLine(name: line.name, points: line.geoSerie.toLatLng()));
+            }
+            break;
+
+          case GeoJsonFeatureType.polygon:
+            final poly = feature.geometry as GeoJsonPolygon;
+            for (final geoSerie in poly.geoSeries) {
+              unawaited(addPolygon(
+                  name: geoSerie.name,
+                  points: geoSerie.toLatLng(),
+                  color: color,
+                  borderColor: borderColor,
+                  borderWidth: borderWidth));
+            }
+            break;
+
+          case GeoJsonFeatureType.multipolygon:
+            final mp = feature.geometry as GeoJsonMultiPolygon;
+            for (final poly in mp.polygons) {
+              for (final geoSerie in poly.geoSeries) {
+                unawaited(addPolygon(
+                    name: geoSerie.name, points: geoSerie.toLatLng()));
+              }
+            }
+            break;
+
+          case GeoJsonFeatureType.geometryCollection:
+            throw "GeoJsonFeatureType.geometryCollection Not implemented";
+        }
+      }
+    });
+
+    await geojson.parse(data);
+  }
+
+  Future<void> removeAllPolygons() => _polygonsState.removeAllPolygons();
+
+  /* Dario */
 
   /// Export all the map assets to a [GeoJsonFeatureCollection]
   GeoJsonFeatureCollection toGeoJsonFeatures() {

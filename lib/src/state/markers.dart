@@ -136,6 +136,16 @@ class MarkersState {
         "updateMarkers", names, removeMarkers, MapControllerChangeType.markers);
   }
 
+  /// Remove all markers from the map
+  /// DARIO
+  Future<void> removeAllMarkers() async {
+    _namedMarkers.clear();
+    _buildMarkers();
+    notify(
+        "updateMarkers", null, removeMarkers, MapControllerChangeType.markers);
+  }
+  /// DARIO
+
   /// Export all markers to a [GeoJsonFeature] with geometry
   /// type [GeoJsonMultiPoint]
   GeoJsonFeature toGeoJsonFeatures() {

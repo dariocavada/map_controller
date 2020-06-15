@@ -47,6 +47,20 @@ class PolygonsState {
     }
   }
 
+  /// Remove all polygons from the map
+  /// DARIO 
+  Future<void> removeAllPolygons() async {
+    for (final k in _namedPolygons.keys) {
+      //_namedPolygons.remove(k);
+    }  
+    _namedPolygons.clear();
+    print("removed all polygons");
+
+    notify("updatePolygons", "", removePolygon, MapControllerChangeType.polygons);
+    return;
+  }
+  /// DARIO
+
   /// Export all polygons to a [GeoJsonFeature] with geometry
   /// type [GeoJsonMultiPolygon]
   GeoJsonFeature<GeoJsonMultiPolygon> toGeoJsonFeatures() {
