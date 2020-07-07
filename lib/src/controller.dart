@@ -160,6 +160,9 @@ class StatefulMapController {
   /// Remove ALL makers from the map (DARIO)
   Future<void> removeAllMarkers() => _markersState.removeAllMarkers();
 
+  /// Remove ALL lines from the map (DARIO)
+  Future<void> removeAllLines() => _linesState.removeAllLines();
+
   /// Fit bounds for all markers on map
   Future<void> fitMarkers() async => _markersState.fitAll();
 
@@ -386,12 +389,12 @@ class StatefulMapController {
 
               case "elevator":
                 marker = MaterialCommunityIcons.elevator;
-                break;  
+                break;
 
               case "information":
                 marker = MaterialCommunityIcons.information;
-                break;  
-  
+                break;
+
               default:
                 marker = MaterialIcons.location_on;
                 break;
