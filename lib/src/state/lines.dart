@@ -45,6 +45,14 @@ class LinesState {
     }
   }
 
+  /// Remove all polygons from the map
+  /// DARIO
+  Future<void> removeAllLines() async {
+    _namedLines.clear();
+    notify("updateLines", "", removeLine, MapControllerChangeType.polygons);
+    return;
+  }
+
   /// Export all lines to a [GeoJsonFeature] with geometry
   /// type [GeoJsonMultiLine]
   GeoJsonFeature<GeoJsonMultiLine> toGeoJsonFeatures() {

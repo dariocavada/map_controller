@@ -104,8 +104,13 @@ class StatefulMapController {
       _statefulMarkersState.mutate(name, property, value);
 
   /// The markers present on the map
-  List<Marker> get markers =>
-      _markersState.markers..addAll(_statefulMarkersState.markers);
+  List<Marker> get markers {
+    List<Marker> markers = [];
+    markers
+      ..addAll(_markersState.markers)
+      ..addAll(_statefulMarkersState.markers);
+    return markers;
+  }
 
   /// The markers present on the map and their names
   Map<String, Marker> get namedMarkers => _markersState.namedMarkers;
@@ -307,13 +312,16 @@ class StatefulMapController {
 
   /* Dario */
   /// Display some geojson data on the map
-  Future<void> fromGeoJsonAdv(String data,
-      {bool verbose = false,
-      String floor = "0",
-      Icon markerIcon = const Icon(MaterialCommunityIcons.elevator),
-      Color color = Colors.black,
-      double borderWidth = 0.0,
-      Color borderColor = const Color(0xFFFFFF00)}) async {
+  Future<void> fromGeoJsonAdv(
+    String data, {
+    bool verbose = false,
+    String floor = "0",
+    Icon markerIcon = const Icon(MaterialCommunityIcons.elevator),
+    Color color = Colors.black,
+    double borderWidth = 0.0,
+    Color borderColor = const Color(0xFFFFFF00),
+    String selectFuid = "???????",
+  }) async {
     final geojson = GeoJson();
     //print("fromGeoJsonAdv: floor: $floor");
     geojson.processedFeatures.listen((GeoJsonFeature feature) {
@@ -391,12 +399,12 @@ class StatefulMapController {
                 marker = MaterialCommunityIcons.elevator;
                 break;
 
-              case "information":
+              case "info":
                 marker = MaterialCommunityIcons.information;
                 break;
 
               default:
-                marker = MaterialIcons.location_on;
+                marker = markerIcon.icon;
                 break;
             }
 
@@ -411,6 +419,7 @@ class StatefulMapController {
                 ),
               ),
             ));
+
             break;
 
           case GeoJsonFeatureType.multipoint:
@@ -442,13 +451,31 @@ class StatefulMapController {
 
           case GeoJsonFeatureType.polygon:
             final poly = feature.geometry as GeoJsonPolygon;
+            final String fuid = feature.properties['id'].toString();
             for (final geoSerie in poly.geoSeries) {
-              unawaited(addPolygon(
-                  name: geoSerie.name,
-                  points: geoSerie.toLatLng(),
-                  color: color,
-                  borderColor: borderColor,
-                  borderWidth: borderWidth));
+              print(
+                  '==================================== ????????FUID $fuid $selectFuid');
+              if (fuid.startsWith(selectFuid)) {
+                unawaited(
+                  addPolygon(
+                    name: geoSerie.name,
+                    points: geoSerie.toLatLng(),
+                    color: borderColor,
+                    borderColor: Colors.grey,
+                    borderWidth: borderWidth,
+                  ),
+                );
+              } else {
+                unawaited(
+                  addPolygon(
+                    name: geoSerie.name,
+                    points: geoSerie.toLatLng(),
+                    color: color,
+                    borderColor: borderColor,
+                    borderWidth: borderWidth,
+                  ),
+                );
+              }
             }
             break;
 
@@ -457,7 +484,9 @@ class StatefulMapController {
             for (final poly in mp.polygons) {
               for (final geoSerie in poly.geoSeries) {
                 unawaited(addPolygon(
-                    name: geoSerie.name, points: geoSerie.toLatLng()));
+                  name: geoSerie.name,
+                  points: geoSerie.toLatLng(),
+                ));
               }
             }
             break;
